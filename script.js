@@ -7,6 +7,7 @@ const handBet = 10;
 let bankroll = startingBankroll;
 let currentRound = null;
 
+// Build a standard 52-card deck and shuffle it before use.
 function createDeck() {
     const deck = [];
 
@@ -23,6 +24,7 @@ function createDeck() {
     return shuffle(deck);
 }
 
+// Randomize the deck order in place with a Fisher-Yates style shuffle.
 function shuffle(deck) {
     for (let index = deck.length - 1; index > 0; index -= 1) {
         const swapIndex = Math.floor(Math.random() * (index + 1));
@@ -34,10 +36,12 @@ function shuffle(deck) {
     return deck;
 }
 
+// Remove and return the top card from the deck.
 function drawCard(deck) {
     return deck.pop();
 }
 
+// Convert a card rank into its blackjack point value.
 function getCardValue(rank) {
     if (rank === "A") {
         return 11;
@@ -50,6 +54,7 @@ function getCardValue(rank) {
     return Number(rank);
 }
 
+// Score the dealer hand, automatically reducing aces from 11 to 1 when needed.
 function evaluateDealerHand(hand) {
     let total = 0;
     let aces = 0;
@@ -74,6 +79,7 @@ function evaluateDealerHand(hand) {
     };
 }
 
+// Score the player hand using the player's chosen ace values.
 function evaluatePlayerHand(hand, aceChoices) {
     let total = 0;
     let hasAceValuedAtEleven = false;
@@ -100,6 +106,7 @@ function evaluatePlayerHand(hand, aceChoices) {
     };
 }
 
+// Create the dropdown control that lets the player choose 1 or 11 for an ace.
 function createAceControl(index, aceNumber, aceChoices) {
     const wrapper = document.createElement("div");
     wrapper.className = "ace-control";
@@ -134,6 +141,7 @@ function createAceControl(index, aceNumber, aceChoices) {
     return wrapper;
 }
 
+// Render a hand of cards into the page, with optional hidden dealer cards or ace controls.
 function renderHand(elementId, hand, options = {}) {
     const container = document.getElementById(elementId);
     container.innerHTML = "";
@@ -167,6 +175,7 @@ function renderHand(elementId, hand, options = {}) {
     }
 }
 
+// Update a score label with the hand total and any blackjack or bust status.
 function setScore(elementId, label, total, state) {
     const score = document.getElementById(elementId);
     let text = label + " Total: " + total;
@@ -180,6 +189,7 @@ function setScore(elementId, label, total, state) {
     score.textContent = text;
 }
 
+// Show the dealer's visible total during play, or the full total after reveal.
 function setDealerScore(round, dealerState) {
     if (round.phase === "playerTurn") {
         const visibleTotal = getCardValue(round.dealerHand[0].rank);
@@ -190,6 +200,7 @@ function setDealerScore(round, dealerState) {
     setScore("dealerScore", "Dealer", dealerState.total, dealerState);
 }
 
+// Enable or disable the Hit and Stay buttons based on whether it is the player's turn.
 function setControlsDisabledState(round) {
     const hitButton = document.getElementById("hitButton");
     const stayButton = document.getElementById("stayButton");
@@ -199,12 +210,14 @@ function setControlsDisabledState(round) {
     stayButton.disabled = !isPlayerTurn;
 }
 
+// Refresh the bankroll display and show the current hand's fixed bet.
 function updateBankrollDisplay(round) {
     const bankrollStatus = document.getElementById("bankrollStatus");
     const currentBet = round ? round.bet : handBet;
     bankrollStatus.textContent = "Bankroll: $" + bankroll + " | Current Bet: $" + currentBet;
 }
 
+// Compare the final player and dealer states and return the hand result text.
 function determineWinner(playerState, dealerState) {
     if (playerState.isBlackjack && dealerState.isBlackjack) {
         return {
@@ -268,6 +281,7 @@ function determineWinner(playerState, dealerState) {
     };
 }
 
+// Apply the hand result to the bankroll once so wins and losses are only counted once.
 function settleBet(round, result) {
     if (round.isSettled) {
         return;
@@ -282,6 +296,7 @@ function settleBet(round, result) {
     round.isSettled = true;
 }
 
+// Automatically stand for the player when their chosen total reaches exactly 21.
 function autoStayIfPlayerHas21(playerState) {
     if (currentRound && currentRound.phase === "playerTurn" && playerState.total === 21 && !playerState.isBust) {
         stayPlayer();
@@ -291,6 +306,7 @@ function autoStayIfPlayerHas21(playerState) {
     return false;
 }
 
+// Redraw the current round state, update scores, and resolve the hand when needed.
 function updateRoundDisplay() {
     if (!currentRound) {
         return;
@@ -344,6 +360,7 @@ function updateRoundDisplay() {
     updateBankrollDisplay(currentRound);
 }
 
+// Start a new hand, deal two cards each, and initialize the round state.
 function dealRound() {
     if (bankroll < handBet) {
         document.getElementById("winningScore").textContent = "Out of money";
@@ -379,6 +396,7 @@ function dealRound() {
     updateRoundDisplay();
 }
 
+// Give the player one additional card and initialize ace choice if the new card is an ace.
 function hitPlayer() {
     if (!currentRound || currentRound.phase !== "playerTurn") {
         return;
@@ -394,6 +412,7 @@ function hitPlayer() {
     updateRoundDisplay();
 }
 
+// End the player's turn and let the dealer draw until reaching at least 17.
 function stayPlayer() {
     if (!currentRound || currentRound.phase !== "playerTurn") {
         return;
